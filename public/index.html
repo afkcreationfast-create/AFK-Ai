@@ -1,0 +1,456 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0a0d">
+<title>AFK AI — Intelligence, réinventée</title>
+<style>
+:root {
+  --bg:#090a0e; --panel:#111319; --panel2:#191c25;
+  --line:#292d38; --text:#f4f5fa; --muted:#9298a9;
+  --accent:#a78bfa; --accent2:#7c5cff; --green:#64e5ad;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+font-family:Inter,system-ui,-apple-system,sans-serif;min-height:100vh}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{width:265px;background:#0d0e13;border-right:1px solid var(--line);
+padding:22px 15px;display:flex;flex-direction:column;gap:18px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:11px;padding:4px 7px 15px}
+.logo{height:42px;width:42px;border-radius:14px;background:linear-gradient(135deg,#c4b5fd,#7957ff);
+display:grid;place-items:center;color:#100d20;font-weight:900;font-size:22px}
+.brand h1{font-size:19px;margin:0;letter-spacing:-.5px}
+.brand small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.new-chat,.navbtn,.history-item,.small-btn{border:1px solid var(--line);
+background:transparent;color:var(--text);border-radius:12px;padding:12px;text-align:left}
+.new-chat{background:var(--accent2);border:0;font-weight:700;text-align:center}
+.navtitle{color:var(--muted);font-size:11px;text-transform:uppercase;
+letter-spacing:1.5px;margin:8px 7px 0}
+.history{display:flex;flex-direction:column;gap:7px;overflow:auto;max-height:40vh}
+.history-item{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.history-item.active,.navbtn:hover{background:var(--panel2)}
+.side-bottom{margin-top:auto;display:grid;gap:9px}
+.side-bottom p{color:var(--muted);font-size:12px;line-height:1.6}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh}
+.topbar{height:70px;border-bottom:1px solid var(--line);display:flex;align-items:center;
+justify-content:space-between;padding:0 28px;gap:12px}
+.topbar h2{font-size:15px;font-weight:600;margin:0}
+.status{font-size:12px;color:var(--green);display:flex;gap:7px;align-items:center}
+.dot{height:7px;width:7px;border-radius:50%;background:var(--green)}
+.content{width:100%;max-width:920px;margin:0 auto;padding:34px 26px;flex:1}
+.welcome{padding:40px 0 24px}
+.eyebrow{color:var(--accent);font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:800}
+.welcome h2{font-size:clamp(30px,5vw,48px);letter-spacing:-1.8px;line-height:1.12;margin:14px 0}
+.welcome h2 span{background:linear-gradient(90deg,#c4b5fd,#8b7bff,#68d9e7);
+-webkit-background-clip:text;background-clip:text;color:transparent}
+.welcome p{color:var(--muted);line-height:1.8;max-width:530px}
+.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:28px 0}
+.suggestion{background:var(--panel);border:1px solid var(--line);border-radius:15px;
+padding:17px;text-align:left;color:var(--text);transition:.2s}
+.suggestion:hover{border-color:var(--accent);transform:translateY(-2px)}
+.suggestion strong{display:block;font-size:14px;margin-bottom:7px}
+.suggestion span{font-size:12px;color:var(--muted);line-height:1.5}
+.messages{display:flex;flex-direction:column;gap:22px;padding-bottom:25px}
+.message{display:flex;gap:12px;align-items:flex-start;line-height:1.75}
+.avatar{width:33px;height:33px;border-radius:11px;background:var(--panel2);
+display:grid;place-items:center;flex-shrink:0;font-size:13px;font-weight:800}
+.message.ai .avatar{background:var(--accent2)}
+.bubble{white-space:pre-wrap;overflow-wrap:anywhere;padding-top:3px;flex:1}
+.composer-wrap{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 18%);
+padding:20px 26px 16px}
+.composer{max-width:850px;margin:auto;border:1px solid #353948;border-radius:19px;
+background:#12141b;padding:10px;display:flex;gap:10px;align-items:flex-end;
+box-shadow:0 10px 45px #0005}
+#prompt{background:transparent;border:0;color:var(--text);outline:0;resize:none;
+width:100%;min-height:45px;max-height:160px;padding:12px}
+#send{height:44px;width:48px;border:0;border-radius:13px;background:var(--accent2);
+color:white;font-size:20px;flex-shrink:0}
+#send:disabled{opacity:.45}
+.hint{text-align:center;color:#71778a;font-size:11px;margin:10px auto 0}
+.hidden{display:none!important}
+.modal{position:fixed;inset:0;background:#000b;display:grid;place-items:center;padding:18px;z-index:10}
+.modal-card{width:100%;max-width:420px;background:var(--panel);border:1px solid var(--line);
+border-radius:22px;padding:25px}
+.modal-card h2{margin:0 0 8px;font-size:24px}
+.modal-card p{color:var(--muted);font-size:13px;line-height:1.6}
+.field{display:grid;gap:7px;margin:14px 0}
+.field label{font-size:12px;color:var(--muted)}
+.field input{width:100%;padding:13px;border:1px solid var(--line);border-radius:11px;
+background:#0b0c11;color:var(--text);outline:0}
+.field input:focus{border-color:var(--accent)}
+.primary,.secondary{width:100%;padding:13px;border-radius:12px;border:0;font-weight:700;margin-top:8px}
+.primary{background:var(--accent2);color:white}
+.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.error{color:#ff9b9b;font-size:13px;white-space:pre-wrap}
+.account{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.admin-box{border:1px solid var(--line);padding:14px;border-radius:12px;margin:10px 0}
+.admin-box strong{color:var(--accent)}
+@media(max-width:720px){
+ .app{display:block}.sidebar{width:100%;padding:12px 14px;border-right:0;border-bottom:1px solid var(--line)}
+ .brand{padding:0 3px 5px}.logo{height:36px;width:36px}.brand h1{font-size:17px}
+ .new-chat{padding:10px}.navtitle,.history,.side-bottom p{display:none}
+ .side-bottom{display:flex;gap:8px;margin:0}
+ .side-bottom button{flex:1;text-align:center;padding:9px;font-size:12px}
+ .topbar{height:54px;padding:0 16px}.content{padding:20px 17px}
+ .welcome{padding:24px 0 8px}.welcome h2{letter-spacing:-1px}
+ .suggestions{grid-template-columns:1fr;gap:9px;margin:20px 0}
+ .suggestion{padding:14px}.composer-wrap{padding:12px 12px 10px}
+ .hint{font-size:10px}.status{font-size:11px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">A</div>
+      <div><h1>AFK AI</h1><small>YOUR INTELLIGENT ASSISTANT</small></div>
+    </div>
+    <button class="new-chat" id="newChat">＋ Nouvelle conversation</button>
+    <div class="navtitle">Historique récent</div>
+    <div class="history" id="history"></div>
+    <div class="side-bottom">
+      <button class="navbtn" id="accountBtn">◉ Mon compte</button>
+      <button class="navbtn hidden" id="adminBtn">⚙ Administration</button>
+      <button class="navbtn" id="logoutBtn">↗ Déconnexion</button>
+      <p>AFK AI · Une nouvelle façon de penser.<br>Protège tes identifiants et ta clé API.</p>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <h2 id="pageTitle">Assistant intelligent</h2>
+      <div class="status"><span class="dot"></span> AFK AI en ligne</div>
+    </header>
+    <section class="content">
+      <div class="welcome" id="welcome">
+        <div class="eyebrow">✦ Bienvenue dans AFK AI</div>
+        <h2>Les grandes idées<br>commencent <span>ici.</span></h2>
+        <p>Pose tes questions, développe tes projets et transforme tes idées en résultats. Ton assistant est prêt à t'aider.</p>
+        <div class="suggestions">
+          <button class="suggestion" data-prompt="Aide-moi à créer un projet professionnel."><strong>✧ Créer un projet</strong><span>Organise tes idées et prépare un plan concret.</span></button>
+          <button class="suggestion" data-prompt="Explique-moi un sujet compliqué de façon simple."><strong>◈ Apprendre plus vite</strong><span>Des explications claires, étape par étape.</span></button>
+          <button class="suggestion" data-prompt="Écris un texte professionnel pour mon entreprise."><strong>⌘ Rédiger un texte</strong><span>Messages, présentations et contenus professionnels.</span></button>
+          <button class="suggestion" data-prompt="Donne-moi des idées originales pour développer mon activité."><strong>✦ Trouver des idées</strong><span>Explore des solutions et de nouvelles possibilités.</span></button>
+        </div>
+      </div>
+      <div class="messages" id="messages"></div>
+    </section>
+    <footer class="composer-wrap">
+      <form class="composer" id="chatForm">
+        <textarea id="prompt" placeholder="Écris ton message à AFK AI..." rows="1" maxlength="8000"></textarea>
+        <button id="send" aria-label="Envoyer">↑</button>
+      </form>
+      <div class="hint">AFK AI peut parfois se tromper. Vérifie les informations importantes.</div>
+    </footer>
+  </main>
+</div>
+
+<div class="modal" id="authModal">
+  <div class="modal-card">
+    <div class="brand" style="padding:0 0 18px"><div class="logo">A</div><div><h1>AFK AI</h1><small>ESPACE SÉCURISÉ</small></div></div>
+    <h2 id="authTitle">Bienvenue</h2>
+    <p id="authDescription">Connecte-toi ou crée ton compte pour commencer.</p>
+    <div id="registerName" class="field hidden"><label>Nom d'utilisateur</label><input id="username" maxlength="40" autocomplete="username" placeholder="Ton nom"></div>
+    <div class="field"><label>Adresse e-mail</label><input id="email" type="email" autocomplete="email" placeholder="toi@exemple.com"></div>
+    <div class="field"><label>Mot de passe</label><input id="password" type="password" autocomplete="current-password" placeholder="10 caractères minimum"></div>
+    <div id="authError" class="error"></div>
+    <button class="primary" id="authSubmit">Se connecter</button>
+    <button class="secondary" id="switchAuth">Créer un compte</button>
+  </div>
+</div>
+
+<div class="modal hidden" id="accountModal">
+  <div class="modal-card">
+    <h2>Mon compte</h2><p>Tes informations AFK AI.</p>
+    <div class="admin-box"><strong id="accountName">Utilisateur</strong><p class="account" id="accountEmail"></p><p id="accountPlan"></p><p id="usageText"></p></div>
+    <button class="primary" id="closeAccount">Fermer</button>
+  </div>
+</div>
+
+<div class="modal hidden" id="adminModal">
+  <div class="modal-card" style="max-height:85vh;overflow:auto">
+    <h2>Administration</h2><p>Statistiques et gestion des comptes.</p>
+    <div id="adminStats"></div><div id="adminUsers"></div>
+    <div id="adminError" class="error"></div>
+    <button class="primary" id="closeAdmin">Fermer</button>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let currentUser = null;
+let currentConversation = null;
+let conversations = [];
+let registerMode = false;
+let sending = false;
+let remaining = null;
+
+async function api(url, options = {}) {
+  const response = await fetch(url, {
+    credentials: "same-origin",
+    ...options,
+    headers: {
+      ...(options.body ? {"Content-Type":"application/json"} : {}),
+      ...(options.headers || {})
+    }
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Une erreur est survenue.");
+  return data;
+}
+
+function showModal(id, show = true) {
+  $(id).classList.toggle("hidden", !show);
+}
+
+function escapeText(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[char]);
+}
+
+function showAuth(mode = false) {
+  registerMode = mode;
+  $("authTitle").textContent = mode ? "Créer ton compte" : "Bienvenue";
+  $("authDescription").textContent = mode
+    ? "Rejoins AFK AI en quelques secondes."
+    : "Connecte-toi pour retrouver tes conversations.";
+  $("registerName").classList.toggle("hidden", !mode);
+  $("authSubmit").textContent = mode ? "Créer mon compte" : "Se connecter";
+  $("switchAuth").textContent = mode ? "J'ai déjà un compte" : "Créer un compte";
+  $("authError").textContent = "";
+  $("password").autocomplete = mode ? "new-password" : "current-password";
+  showModal("authModal");
+}
+
+async function boot() {
+  try {
+    const data = await api("/api/me");
+    currentUser = data.user;
+    showModal("authModal", false);
+    $("adminBtn").classList.toggle("hidden", currentUser.role !== "admin");
+    await loadConversations();
+  } catch {
+    showAuth(false);
+  }
+}
+
+async function loadConversations() {
+  try {
+    const data = await api("/api/conversations");
+    conversations = data.conversations;
+    renderHistory();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function renderHistory() {
+  $("history").innerHTML = conversations.map(c =>
+    `<button class="history-item ${Number(c.id) === Number(currentConversation) ? "active" : ""}" data-id="${c.id}">▤ ${escapeText(c.title)}</button>`
+  ).join("");
+  document.querySelectorAll(".history-item").forEach(button => {
+    button.onclick = () => openConversation(Number(button.dataset.id));
+  });
+}
+
+function addMessage(role, content) {
+  $("welcome").classList.add("hidden");
+  const item = document.createElement("div");
+  item.className = "message " + (role === "assistant" ? "ai" : "user");
+  const avatar = document.createElement("div");
+  avatar.className = "avatar";
+  avatar.textContent = role === "assistant" ? "A" : (currentUser?.username?.[0] || "U").toUpperCase();
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.textContent = content;
+  item.append(avatar, bubble);
+  $("messages").appendChild(item);
+  window.scrollTo({top:document.body.scrollHeight, behavior:"smooth"});
+}
+
+async function openConversation(id) {
+  try {
+    const data = await api(`/api/conversations/${id}/messages`);
+    currentConversation = id;
+    $("messages").innerHTML = "";
+    $("welcome").classList.toggle("hidden", data.messages.length > 0);
+    data.messages.forEach(m => addMessage(m.role, m.content));
+    renderHistory();
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function newConversation() {
+  currentConversation = null;
+  $("messages").innerHTML = "";
+  $("welcome").classList.remove("hidden");
+  $("pageTitle").textContent = "Nouvelle conversation";
+  renderHistory();
+  $("prompt").focus();
+}
+
+async function sendMessage(text) {
+  if (!currentUser || sending || !text.trim()) return;
+  sending = true;
+  $("send").disabled = true;
+  $("prompt").value = "";
+  $("prompt").style.height = "auto";
+  addMessage("user", text);
+  const loading = document.createElement("div");
+  loading.className = "message ai";
+  loading.id = "loading";
+  loading.innerHTML = '<div class="avatar">A</div><div class="bubble">AFK AI réfléchit…</div>';
+  $("messages").appendChild(loading);
+
+  try {
+    const data = await api("/api/chat", {
+      method:"POST",
+      body:JSON.stringify({message:text, conversationId:currentConversation})
+    });
+    currentConversation = data.conversationId;
+    remaining = data.remaining;
+    $("loading")?.remove();
+    addMessage("assistant", data.answer);
+    await loadConversations();
+  } catch (error) {
+    $("loading")?.remove();
+    addMessage("assistant", "⚠ " + error.message);
+  } finally {
+    sending = false;
+    $("send").disabled = false;
+    $("prompt").focus();
+  }
+}
+
+$("chatForm").addEventListener("submit", event => {
+  event.preventDefault();
+  sendMessage($("prompt").value);
+});
+
+$("prompt").addEventListener("input", () => {
+  $("prompt").style.height = "auto";
+  $("prompt").style.height = Math.min($("prompt").scrollHeight, 160) + "px";
+});
+
+$("prompt").addEventListener("keydown", event => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    $("chatForm").requestSubmit();
+  }
+});
+
+document.querySelectorAll("[data-prompt]").forEach(button => {
+  button.addEventListener("click", () => sendMessage(button.dataset.prompt));
+});
+
+$("newChat").onclick = newConversation;
+$("switchAuth").onclick = () => showAuth(!registerMode);
+
+$("authSubmit").onclick = async () => {
+  $("authError").textContent = "";
+  const email = $("email").value.trim();
+  const password = $("password").value;
+  const username = $("username").value.trim();
+
+  try {
+    const data = await api(registerMode ? "/api/register" : "/api/login", {
+      method:"POST",
+      body:JSON.stringify({email,password,username})
+    });
+    currentUser = data.user;
+    showModal("authModal", false);
+    $("adminBtn").classList.toggle("hidden", currentUser.role !== "admin");
+    await loadConversations();
+  } catch (error) {
+    $("authError").textContent = error.message;
+  }
+};
+
+$("logoutBtn").onclick = async () => {
+  try { await api("/api/logout", {method:"POST"}); } catch {}
+  currentUser = null;
+  currentConversation = null;
+  $("messages").innerHTML = "";
+  $("history").innerHTML = "";
+  showAuth(false);
+};
+
+$("accountBtn").onclick = () => {
+  if (!currentUser) return showAuth(false);
+  $("accountName").textContent = currentUser.username;
+  $("accountEmail").textContent = currentUser.email;
+  $("accountPlan").textContent = currentUser.role === "admin"
+    ? "Plan administrateur · Accès illimité"
+    : currentUser.premium ? "Plan Premium" : "Plan gratuit · 10 messages par jour";
+  $("usageText").textContent = remaining === null
+    ? "Le compteur sera actualisé après ton prochain message."
+    : remaining + " message(s) restant(s) selon la dernière réponse.";
+  showModal("accountModal");
+};
+$("closeAccount").onclick = () => showModal("accountModal", false);
+
+$("adminBtn").onclick = async () => {
+  showModal("adminModal");
+  $("adminStats").textContent = "Chargement des statistiques…";
+  $("adminUsers").innerHTML = "";
+  $("adminError").textContent = "";
+
+  try {
+    const stats = await api("/api/admin/stats");
+    $("adminStats").innerHTML =
+      `<div class="admin-box">Utilisateurs : <strong>${stats.users}</strong><br>Conversations : <strong>${stats.conversations}</strong><br>Messages : <strong>${stats.messages}</strong></div>`;
+
+    const data = await api("/api/admin/users");
+    $("adminUsers").innerHTML = data.users.map(user => `
+      <div class="admin-box">
+        <strong>${escapeText(user.username)}</strong>
+        <p class="account">${escapeText(user.email)}</p>
+        <p>${user.premium ? "Premium" : "Gratuit"} · ${user.disabled ? "Désactivé" : "Actif"}</p>
+        ${user.role !== "admin" ? `
+          <button class="secondary" data-premium="${user.id}" data-value="${!user.premium}">
+            ${user.premium ? "Retirer Premium" : "Activer Premium"}
+          </button>
+          <button class="secondary" data-disabled="${user.id}" data-value="${!user.disabled}">
+            ${user.disabled ? "Réactiver" : "Désactiver"}
+          </button>` : ""}
+      </div>`).join("");
+
+    document.querySelectorAll("[data-premium]").forEach(button => {
+      button.onclick = () => updateUser(button.dataset.premium, {
+        premium:button.dataset.value === "true"
+      });
+    });
+    document.querySelectorAll("[data-disabled]").forEach(button => {
+      button.onclick = () => updateUser(button.dataset.disabled, {
+        disabled:button.dataset.value === "true"
+      });
+    });
+  } catch (error) {
+    $("adminError").textContent = error.message;
+    $("adminStats").textContent = "";
+  }
+};
+
+async function updateUser(id, change) {
+  try {
+    await api("/api/admin/users/" + id, {
+      method:"PATCH", body:JSON.stringify(change)
+    });
+    $("adminBtn").click();
+  } catch (error) {
+    $("adminError").textContent = error.message;
+  }
+}
+$("closeAdmin").onclick = () => showModal("adminModal", false);
+
+boot();
+</script>
+</body>
+</html>

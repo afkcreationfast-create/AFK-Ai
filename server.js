@@ -48,9 +48,10 @@ app.post('/api/chat', async (req, res) => {
 
         userSessions[username].push({ role: "user", content: message });
 
+        // MODIFICATION ICI : Utilisation de qwen/qwen3.8-27b
         const chatCompletion = await groq.chat.completions.create({
             messages: userSessions[username],
-            model: "llama-3.3-70b-versatile",
+            model: "qwen/qwen3.8-27b",
             temperature: 0.7,
         });
 
